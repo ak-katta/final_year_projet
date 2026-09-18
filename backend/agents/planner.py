@@ -27,13 +27,14 @@ Site type: {site_type}
 Domain guidance:
 {notes}
 
-Available elements (use ONLY these selectors):
-{elements}
+Pages discovered, each with its own elements and forms. A test can only
+use selectors from ONE page block below, and its first step MUST be a
+"goto" to that page's URL — selectors from other pages won't exist until
+you navigate there:
+{pages}
 
-Forms on page:
-{forms}
-
-Generate 8-15 test cases covering the domain guidance.
+Generate 8-15 test cases covering the domain guidance, spread across the
+discovered pages where relevant.
 
 Reply with ONLY this JSON array:
 [
@@ -44,6 +45,7 @@ Reply with ONLY this JSON array:
     "expected": "Cart badge shows 1",
     "severity_if_fail": "high",
     "steps": [
+      {{"action": "goto", "value": "https://example.com/cart", "description": "Open the cart page"}},
       {{"action": "click", "selector": "#add-to-cart", "description": "Click add to cart"}},
       {{"action": "assert_text", "value": "1", "description": "Cart shows 1 item"}}
     ]
@@ -65,8 +67,7 @@ class PlannerAgent(Agent):
         self.healer = healer
 
     def run(self, state: QAState) -> QAState:
-        snap = state.initial_snapshot
-        if not snap:
+        if not state.initial_snapshot and not state.page_snapshots:
             state.add_error("planner", "no initial_snapshot")
             return state
 
@@ -74,8 +75,7 @@ class PlannerAgent(Agent):
             url=state.url,
             site_type=state.site_type.value,
             notes=state.plan_notes or "(none)",
-            elements=self._fmt_elements(snap),
-            forms=self._fmt_forms(snap),
+            pages=self._fmt_pages(state),
         )
 
         raw = self.ask(prompt, state, system=SYSTEM)
@@ -181,6 +181,23 @@ class PlannerAgent(Agent):
             return ActionType.CLICK
 
     # ── Formatting helpers ────────────────────────────────────
+
+    def _fmt_pages(self, state: QAState) -> str:
+        snaps = state.page_snapshots or (
+            [state.initial_snapshot] if state.initial_snapshot else []
+        )
+        if not snaps:
+            return "(none)"
+        # cap it — with a lot of crawled pages this section alone could
+        # blow past a reasonable prompt size
+        blocks = []
+        for snap in snaps[:8]:
+            blocks.append(
+                f"--- {snap.url} ---\n"
+                f"Elements:\n{self._fmt_elements(snap)}\n"
+                f"Forms:\n{self._fmt_forms(snap)}"
+            )
+        return "\n\n".join(blocks)
 
     def _fmt_elements(self, snap: PageSnapshot) -> str:
         if not snap.interactive_elements:

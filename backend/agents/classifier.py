@@ -91,12 +91,13 @@ class ClassifierAgent(Agent):
         except (TypeError, ValueError):
             state.site_type_confidence = 0.0
 
-        # Metadata
+        # Metadata — merge rather than replace, since crawling may have
+        # already stashed pages_discovered/discovered_urls in here
         meta = data.get("metadata", {}) or {}
         if not isinstance(meta, dict):
             meta = {}
         meta["signals"] = data.get("signals", []) or []
-        state.site_metadata = meta
+        state.site_metadata.update(meta)
 
         self.log(
             state,

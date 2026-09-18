@@ -1,12 +1,15 @@
 const form = document.getElementById("run-form");
 const urlInput = document.getElementById("url-input");
 const maxTestsInput = document.getElementById("max-tests-input");
+const maxPagesInput = document.getElementById("max-pages-input");
 const submitBtn = form.querySelector("button");
 
 const statusBox = document.getElementById("status-box");
 const statusUrl = document.getElementById("status-url");
 const statusPhase = document.getElementById("status-phase");
 const statusSitetype = document.getElementById("status-sitetype");
+const statusPages = document.getElementById("status-pages");
+const statusLinks = document.getElementById("status-links");
 
 const results = document.getElementById("results");
 const testsTableBody = document.querySelector("#tests-table tbody");
@@ -24,6 +27,8 @@ form.addEventListener("submit", async (e) => {
   const body = { url: urlInput.value };
   const maxTests = parseInt(maxTestsInput.value, 10);
   if (maxTests > 0) body.max_tests = maxTests;
+  const maxPages = parseInt(maxPagesInput.value, 10);
+  if (maxPages > 0) body.max_pages = maxPages;
 
   submitBtn.disabled = true;
   submitBtn.textContent = "starting...";
@@ -72,6 +77,12 @@ function render(data) {
   statusUrl.textContent = data.url;
   statusPhase.textContent = data.phase;
   statusSitetype.textContent = data.site_type;
+  statusPages.textContent = data.pages_discovered ?? "-";
+
+  const links = [];
+  if (data.dashboard_url) links.push(`<a href="${data.dashboard_url}" target="_blank">dashboard</a>`);
+  if (data.report_html_url) links.push(`<a href="${data.report_html_url}" target="_blank">detailed HTML report</a>`);
+  statusLinks.innerHTML = links.join(" &middot; ");
 
   if (data.tests.length === 0 && !data.fatal_error) return;
 

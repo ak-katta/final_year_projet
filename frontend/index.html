@@ -13,6 +13,7 @@
   <form id="run-form">
     <input type="url" id="url-input" placeholder="https://example.com" required>
     <input type="number" id="max-tests-input" placeholder="max tests (optional)" min="1">
+    <input type="number" id="max-pages-input" placeholder="max pages (default 1)" min="1">
     <button type="submit">run it</button>
   </form>
 
@@ -20,6 +21,8 @@
     <p><strong>url:</strong> <span id="status-url"></span></p>
     <p><strong>phase:</strong> <span id="status-phase">-</span></p>
     <p><strong>site type:</strong> <span id="status-sitetype">-</span></p>
+    <p><strong>pages discovered:</strong> <span id="status-pages">-</span></p>
+    <p id="status-links"></p>
   </div>
 
   <div id="results" class="hidden">

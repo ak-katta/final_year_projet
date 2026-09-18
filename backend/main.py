@@ -39,6 +39,7 @@ class NewRunRequest(BaseModel):
     url: str
     headless: bool = True
     max_tests: int | None = None
+    max_pages: int = 1
 
 
 @app.post("/api/runs")
@@ -53,7 +54,11 @@ def start_run(body: NewRunRequest):
     thread = threading.Thread(
         target=orchestrator.run_qa,
         args=(state,),
-        kwargs={"headless": body.headless, "max_tests": body.max_tests},
+        kwargs={
+            "headless": body.headless,
+            "max_tests": body.max_tests,
+            "max_pages": max(1, body.max_pages),
+        },
         daemon=True,
     )
     thread.start()
@@ -104,6 +109,9 @@ def get_run(run_id: str):
         "warnings": state.warnings[-10:],
         "fatal_error": state.fatal_error,
         "report": state.full_report or None,
+        "dashboard_url": state.site_metadata.get("dashboard_url"),
+        "report_html_url": state.site_metadata.get("report_html_url"),
+        "pages_discovered": state.site_metadata.get("pages_discovered"),
     }
 
 
@@ -133,13 +141,14 @@ def _bug_json(state: QAState, bug) -> dict:
         "url": bug.url,
         "expected": bug.expected,
         "actual": bug.actual,
-        "screenshot": f"/screenshots/{shot.relative_path}" if shot else None,
+        "screenshot": f"/runs/{shot.relative_path}" if shot else None,
     }
 
 
-# screenshots get saved under runs/<run_id>/screenshots/<id>.png by capture.py
+# everything a run produces — screenshots, dashboard.html, report.html,
+# state.json — lands under runs/<run_id>/, so one mount serves all of it
 Path("runs").mkdir(exist_ok=True)
-app.mount("/screenshots", StaticFiles(directory="runs"), name="screenshots")
+app.mount("/runs", StaticFiles(directory="runs"), name="runs")
 
 # serve the frontend itself, if it's there
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"

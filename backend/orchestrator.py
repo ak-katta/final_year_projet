@@ -10,6 +10,7 @@ far along a run is.
 from datetime import datetime
 
 import capture
+import report_html
 from state import QAState, Phase, TestStatus
 from llm_router import LLMRouter
 from agents.classifier import ClassifierAgent
@@ -21,7 +22,12 @@ from agents.healer import HealerAgent
 from agents.reporter import ReporterAgent
 
 
-def run_qa(state: QAState, headless: bool = True, max_tests: int | None = None) -> QAState:
+def run_qa(
+    state: QAState,
+    headless: bool = True,
+    max_tests: int | None = None,
+    max_pages: int = 1,
+) -> QAState:
     router = LLMRouter.from_env()
     healer = HealerAgent(router)
 
@@ -36,10 +42,13 @@ def run_qa(state: QAState, headless: bool = True, max_tests: int | None = None) 
         page = capture.launch(state, headless=headless)
         state.mark_phase(Phase.NAVIGATED)
 
-        snap = capture.snapshot(page)
-        state.initial_snapshot = snap
-        state.add_snapshot(snap)
-        capture.capture(state, page, kind="phase_change", label="initial load")
+        snapshots = capture.crawl(state, page, max_pages=max_pages)
+        if snapshots:
+            state.initial_snapshot = snapshots[0]
+        if page.url != state.url:
+            # crawl left us on whatever page it visited last — come back to
+            # the starting URL so execution begins from a known page
+            page.goto(state.url, wait_until="domcontentloaded", timeout=30_000)
 
         classifier.run(state)
         domain_expert.run(state)
@@ -73,6 +82,10 @@ def run_qa(state: QAState, headless: bool = True, max_tests: int | None = None) 
 
         reporter.run(state)
         state.finish()
+
+        html_paths = report_html.generate(state)
+        state.site_metadata["dashboard_url"] = f"/runs/{state.run_id}/{html_paths['dashboard'].name}"
+        state.site_metadata["report_html_url"] = f"/runs/{state.run_id}/{html_paths['report'].name}"
 
     except Exception as e:
         state.mark_failed(str(e))

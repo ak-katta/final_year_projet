@@ -5,8 +5,10 @@ the test run goes along.
 """
 
 import hashlib
+import re
 import time
 from pathlib import Path
+from urllib.parse import urldefrag, urljoin, urlparse
 
 from playwright.sync_api import sync_playwright
 
@@ -173,6 +175,57 @@ def snapshot(page) -> PageSnapshot:
         images=images,
         load_time_ms=(time.time() - t0) * 1000,
     )
+
+
+def crawl(state: QAState, page, max_pages: int = 1) -> list[PageSnapshot]:
+    """
+    Snapshots the page currently loaded, then (if max_pages > 1) follows
+    same-origin links breadth-first up to max_pages pages total. Each page
+    gets a full-page screenshot too. Leaves `page` sitting on whichever
+    page it visited last — callers that need to land back on the original
+    URL before doing anything else have to navigate there themselves.
+    """
+    origin = urlparse(page.url).netloc.lower()
+    start_url = page.url
+    visited: list[str] = []
+    queue: list[str] = [start_url]
+    snapshots: list[PageSnapshot] = []
+
+    while queue and len(visited) < max_pages:
+        target = urldefrag(queue.pop(0))[0]
+        if target in visited:
+            continue
+
+        if target != page.url:
+            try:
+                page.goto(target, wait_until="domcontentloaded", timeout=30_000)
+                page.wait_for_timeout(300)
+            except Exception as e:
+                state.add_warning(f"crawl: couldn't reach {target}: {e}")
+                continue
+
+        visited.append(target)
+        snap = snapshot(page)
+        snapshots.append(snap)
+        state.add_snapshot(snap)
+        capture(state, page, kind="full_page", label=f"page {len(visited)}: {snap.title or target}")
+
+        for link in snap.links:
+            if len(queue) >= max_pages * 4:
+                break
+            if link.external or not link.href:
+                continue
+            full = urldefrag(urljoin(page.url, link.href))[0]
+            if urlparse(full).netloc.lower() != origin:
+                continue
+            if re.search(r"logout|signout|log-out|sign-out|delete|remove", full, re.I):
+                continue  # don't crawl into anything that mutates state
+            if full not in visited and full not in queue:
+                queue.append(full)
+
+    state.site_metadata["pages_discovered"] = len(snapshots)
+    state.site_metadata["discovered_urls"] = [s.url for s in snapshots]
+    return snapshots
 
 
 def capture(

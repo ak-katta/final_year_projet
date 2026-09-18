@@ -39,7 +39,7 @@ h2 {
   border: 1px solid #ccc;
 }
 
-#max-tests-input {
+#max-tests-input, #max-pages-input {
   width: 140px;
   padding: 8px;
   font-size: 14px;
