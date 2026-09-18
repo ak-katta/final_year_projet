@@ -1,0 +1,73 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>QA dashboard &middot; 846c3dbfa0f3</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0b1020;color:#e5e7eb;margin:0;line-height:1.5}
+header{padding:28px 5%;background:#111827;border-bottom:1px solid #273449;display:flex;justify-content:space-between}
+.eyebrow{font-size:11px;letter-spacing:2px;color:#60a5fa}
+h1{margin:4px 0;font-size:26px}
+.run,small,.mono{color:#94a3b8;font-family:monospace}
+.run a{color:#93c5fd}
+main{max-width:1150px;margin:24px auto;padding:0 20px}
+.hero,.panel{background:#111827;border:1px solid #273449;border-radius:14px;padding:20px;margin-bottom:18px}
+.hero{display:flex;gap:24px;align-items:center}
+.score{font-size:42px;font-weight:800}
+.score small{display:block;font-size:11px}
+.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;flex:1}
+.card{background:#0b1020;border:1px solid #273449;border-radius:9px;padding:12px}
+.card span{font-size:9px;color:#94a3b8}
+.card b{display:block;font-size:22px}
+.toolbar{display:flex;gap:10px;margin:12px 0}
+.toolbar input,.toolbar select{background:#0b1020;color:#e5e7eb;border:1px solid #374151;border-radius:8px;padding:9px}
+.toolbar input{width:260px}
+.item,.bug{background:#0b1020;border:1px solid #273449;border-radius:10px;padding:13px;margin:10px 0}
+.item summary{cursor:pointer}
+.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#334155;font-size:11px}
+.pill.passed{background:#14532d}
+.pill.failed{background:#7f1d1d}
+.pill.error{background:#78350f}
+.pill.skipped{background:#334155}
+.pill.critical{background:#7f1d1d}
+.pill.high{background:#9a3412}
+.pill.medium{background:#854d0e}
+.pill.low{background:#1e3a8a}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #273449;text-align:left}
+.gallery{display:flex;gap:8px;flex-wrap:wrap}
+.shot{width:170px;height:105px;object-fit:cover;border-radius:7px;border:1px solid #334155}
+.large .shot{width:230px;height:150px}
+pre{background:#050814;padding:12px;border-radius:8px;white-space:pre-wrap;max-height:300px;overflow:auto}
+.empty{text-align:center;padding:20px;color:#94a3b8}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.hero{display:block}}
+</style></head>
+<body>
+<header>
+  <div>
+    <div class="eyebrow">QA RUN DASHBOARD</div>
+    <h1>Blog - Wikipedia</h1>
+    <p>https://en.wikipedia.org/wiki/Blog</p>
+  </div>
+  <div class="run">Run <b>846c3dbfa0f3</b><br>2026-09-18T20:25:51</div>
+</header>
+<main>
+  <section class="hero">
+    <div class="score">22.2%<small>pass rate</small></div>
+    <div class="cards"><div class="card"><span>PASSED</span><b>2</b></div><div class="card"><span>FAILED</span><b>7</b></div><div class="card"><span>ERROR</span><b>0</b></div><div class="card"><span>SKIPPED</span><b>0</b></div>
+      <div class="card"><span>BUGS</span><b>2</b></div>
+      <div class="card"><span>PAGES</span><b>1</b></div>
+      <div class="card"><span>SHOTS</span><b>8</b></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Bugs</h2>
+    <table><tr><th>Severity</th><th>Title</th><th>Category</th></tr><tr><td><span class="pill high">high</span></td><td>Search results URL missing query parameter</td><td>functional</td></tr><tr><td><span class="pill medium">medium</span></td><td>Appearance dropdown checkbox not found on page</td><td>ui</td></tr></table>
+  </section>
+
+  <section class="panel">
+    <h2>Pages discovered</h2>
+    <table><tr><th>Title</th><th>URL</th><th>Load time</th></tr><tr><td>Blog - Wikipedia</td><td><a target="_blank" href="https://en.wikipedia.org/wiki/Blog">https://en.wikipedia.org/wiki/Blog</a></td><td>108.5 ms</td></tr></table>
+  </section>
+
+  <p><a href="report.html">Open the detailed step-by-step report &rarr;</a></p>
+</main>
+</body></html>
