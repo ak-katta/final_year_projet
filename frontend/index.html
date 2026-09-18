@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QA Agent</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>QA Agent</h1>
+  <p class="subtitle">points a browser at a URL, plans some tests with an LLM, runs them, tells you what broke</p>
+
+  <form id="run-form">
+    <input type="url" id="url-input" placeholder="https://example.com" required>
+    <input type="number" id="max-tests-input" placeholder="max tests (optional)" min="1">
+    <button type="submit">run it</button>
+  </form>
+
+  <div id="status-box" class="hidden">
+    <p><strong>url:</strong> <span id="status-url"></span></p>
+    <p><strong>phase:</strong> <span id="status-phase">-</span></p>
+    <p><strong>site type:</strong> <span id="status-sitetype">-</span></p>
+  </div>
+
+  <div id="results" class="hidden">
+
+    <section>
+      <h2>tests</h2>
+      <table id="tests-table">
+        <thead><tr><th>name</th><th>category</th><th>status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>bugs found</h2>
+      <div id="bugs-list"></div>
+    </section>
+
+    <section>
+      <h2>report</h2>
+      <pre id="report-text"></pre>
+    </section>
+
+  </div>
+
+  <section>
+    <h2>past runs</h2>
+    <table id="history-table">
+      <thead><tr><th>url</th><th>phase</th><th>passed</th><th>failed</th><th>bugs</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

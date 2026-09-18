@@ -1,0 +1,157 @@
+body {
+  font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 16px;
+  background: #fff;
+  color: #222;
+  line-height: 1.5;
+  color-scheme: light;
+}
+
+h1 {
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: #666;
+  margin-top: 0;
+  font-size: 14px;
+}
+
+h2 {
+  font-size: 16px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 4px;
+  margin-top: 32px;
+}
+
+#run-form {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+#url-input {
+  flex: 1;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+}
+
+#max-tests-input {
+  width: 140px;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 8px 16px;
+  background: #222;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background: #444;
+}
+
+button:disabled {
+  background: #999;
+  cursor: default;
+}
+
+.hidden {
+  display: none;
+}
+
+#status-box {
+  background: #f6f6f6;
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+#status-box p {
+  margin: 2px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th, td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  color: #666;
+  font-weight: normal;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.status-passed { color: #1a7f37; }
+.status-failed { color: #cf222e; }
+.status-pending { color: #999; }
+.status-running { color: #9a6700; }
+.status-skipped { color: #999; }
+
+.bug {
+  border: 1px solid #eee;
+  border-left: 3px solid #cf222e;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.bug.sev-critical, .bug.sev-high {
+  border-left-color: #cf222e;
+}
+
+.bug.sev-medium {
+  border-left-color: #bf8700;
+}
+
+.bug.sev-low, .bug.sev-info {
+  border-left-color: #999;
+}
+
+.bug h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+
+.bug .meta {
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.bug img {
+  max-width: 100%;
+  border: 1px solid #ddd;
+  margin-top: 6px;
+}
+
+#report-text {
+  white-space: pre-wrap;
+  background: #fafafa;
+  padding: 12px;
+  font-size: 13px;
+  border: 1px solid #eee;
+}
+
+#history-table tbody tr {
+  cursor: pointer;
+}
+
+#history-table tbody tr:hover {
+  background: #f6f6f6;
+}

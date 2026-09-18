@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "qa-agent-api",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["--app-dir", "backend", "main:app", "--host", "0.0.0.0", "--port", "8000"],
+      "port": 8000
+    }
+  ]
+}
