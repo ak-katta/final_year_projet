@@ -1,0 +1,114 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>QA report &middot; 846c3dbfa0f3</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0b1020;color:#e5e7eb;margin:0;line-height:1.5}
+header{padding:28px 5%;background:#111827;border-bottom:1px solid #273449;display:flex;justify-content:space-between}
+.eyebrow{font-size:11px;letter-spacing:2px;color:#60a5fa}
+h1{margin:4px 0;font-size:26px}
+.run,small,.mono{color:#94a3b8;font-family:monospace}
+.run a{color:#93c5fd}
+main{max-width:1150px;margin:24px auto;padding:0 20px}
+.hero,.panel{background:#111827;border:1px solid #273449;border-radius:14px;padding:20px;margin-bottom:18px}
+.hero{display:flex;gap:24px;align-items:center}
+.score{font-size:42px;font-weight:800}
+.score small{display:block;font-size:11px}
+.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;flex:1}
+.card{background:#0b1020;border:1px solid #273449;border-radius:9px;padding:12px}
+.card span{font-size:9px;color:#94a3b8}
+.card b{display:block;font-size:22px}
+.toolbar{display:flex;gap:10px;margin:12px 0}
+.toolbar input,.toolbar select{background:#0b1020;color:#e5e7eb;border:1px solid #374151;border-radius:8px;padding:9px}
+.toolbar input{width:260px}
+.item,.bug{background:#0b1020;border:1px solid #273449;border-radius:10px;padding:13px;margin:10px 0}
+.item summary{cursor:pointer}
+.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#334155;font-size:11px}
+.pill.passed{background:#14532d}
+.pill.failed{background:#7f1d1d}
+.pill.error{background:#78350f}
+.pill.skipped{background:#334155}
+.pill.critical{background:#7f1d1d}
+.pill.high{background:#9a3412}
+.pill.medium{background:#854d0e}
+.pill.low{background:#1e3a8a}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #273449;text-align:left}
+.gallery{display:flex;gap:8px;flex-wrap:wrap}
+.shot{width:170px;height:105px;object-fit:cover;border-radius:7px;border:1px solid #334155}
+.large .shot{width:230px;height:150px}
+pre{background:#050814;padding:12px;border-radius:8px;white-space:pre-wrap;max-height:300px;overflow:auto}
+.empty{text-align:center;padding:20px;color:#94a3b8}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.hero{display:block}}
+</style></head>
+<body>
+<header>
+  <div>
+    <div class="eyebrow">DETAILED QA REPORT</div>
+    <h1>Blog - Wikipedia</h1>
+    <p>https://en.wikipedia.org/wiki/Blog</p>
+  </div>
+  <div class="run">Run <b>846c3dbfa0f3</b><br>2026-09-18T20:25:51<br><a href="dashboard.html">&larr; dashboard</a></div>
+</header>
+<main>
+  <section class="panel">
+    <h2>Tests</h2>
+    <div class="toolbar"><input id="search" placeholder="Search tests..." oninput="filterAll()"><select id="status" onchange="filterAll()"><option value="all">All statuses</option><option>passed</option><option>failed</option><option>error</option><option>skipped</option></select></div>
+    <details class="item failed" open><summary><span class="pill failed">failed</span> <b>T-22fd94</b> &middot; Sidebar main navigation links <small>1502.5 ms</small></summary><p>Verify each main sidebar link is clickable and navigates to a new page</p><p><b>Expected:</b> Browser URL changes to the linked page</p><ol><li><b>goto</b> Open the Blog page <small>1502.4 ms</small><div class="mono"></div><div class="gallery"><a href="screenshots/SHOT-b1943aba.png" target="_blank"><img class="shot" src="screenshots/SHOT-b1943aba.png" alt="Failure: Open the Blog page"></a></div><pre>Page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL
+Call log:
+  - navigating to &quot;/wiki/Blog&quot;, waiting until &quot;load&quot;
+</pre></li><li><b>click</b> Click the first sidebar link (Donate) <small>0.0 ms</small><div class="mono">div &gt; ul &gt; li:nth-of-type(1) &gt; a</div><div class="gallery"></div></li><li><b>assert_url</b> Verify URL points to the Donate page <small>0.0 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>click</b> Click the second sidebar link (Create account) <small>0.0 ms</small><div class="mono">div &gt; ul &gt; li:nth-of-type(2) &gt; a</div><div class="gallery"></div></li><li><b>assert_url</b> Verify URL points to the Create account page <small>0.0 ms</small><div class="mono"></div><div class="gallery"></div></li></ol><pre>Page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL
+Call log:
+  - navigating to &quot;/wiki/Blog&quot;, waiting until &quot;load&quot;
+</pre></details><details class="item passed" open><summary><span class="pill passed">passed</span> <b>T-f6c1e4</b> &middot; Sidebar subsection navigation <small>48398.6 ms</small></summary><p>Verify a subsection link in the sidebar navigates correctly</p><p><b>Expected:</b> URL contains the subsection anchor</p><ol><li><b>goto</b> Open the Blog page <small>22220.5 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>click</b> Click the &#x27;Origins&#x27; subsection link <small>13357.3 ms</small><div class="mono">li:nth-of-type(2) &gt; ul &gt; li:nth-of-type(1) &gt; a</div><div class="gallery"></div></li><li><b>assert_url</b> Verify URL includes the &#x27;#Origins&#x27; anchor <small>12820.5 ms</small><div class="mono"></div><div class="gallery"></div></li></ol></details><details class="item failed" open><summary><span class="pill failed">failed</span> <b>T-599431</b> &middot; Search functionality finds content <small>44967.1 ms</small></summary><p>Enter a query in the search box and verify results page loads</p><p><b>Expected:</b> Search results page URL contains the query parameter</p><ol><li><b>goto</b> Open the Blog page <small>12060.9 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>fill</b> Type &#x27;blogging&#x27; into the search field <small>2879.5 ms</small><div class="mono">#searchInput</div><div class="gallery"></div></li><li><b>click</b> Click the Search button <small>28956.1 ms</small><div class="mono">div &gt; div &gt; form &gt; button</div><div class="gallery"></div></li><li><b>assert_url</b> Verify the URL contains the search query <small>1070.2 ms</small><div class="mono"></div><div class="gallery"><a href="screenshots/SHOT-156da252.png" target="_blank"><img class="shot" src="screenshots/SHOT-156da252.png" alt="Failure: Verify the URL contains the search query"></a></div><pre>URL does not contain &#x27;search&#x27; (got https://en.wikipedia.org/wiki/Blogging)</pre></li></ol><pre>URL does not contain &#x27;search&#x27; (got https://en.wikipedia.org/wiki/Blogging)</pre></details><details class="item failed" open><summary><span class="pill failed">failed</span> <b>T-a669c4</b> &middot; Code block copy button works <small>49044.6 ms</small></summary><p>Click the copy button on a code block and verify the button remains visible</p><p><b>Expected:</b> Copy button stays visible after click</p><ol><li><b>goto</b> Open the Blog page <small>23997.9 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>click</b> Click the first button in the code block (assumed copy) <small>25046.6 ms</small><div class="mono">div &gt; div &gt; div:nth-of-type(1) &gt; button:nth-of-type(1)</div><div class="gallery"><a href="screenshots/SHOT-bb7e68fe.png" target="_blank"><img class="shot" src="screenshots/SHOT-bb7e68fe.png" alt="Failure: Click the first button in the code block (assumed copy)"></a></div><pre>Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;div &gt; div &gt; div:nth-of-type(1) &gt; button:nth-of-type(1)&quot;)
+    - locator resolved to 5 elements. Proceeding with the first one: &lt;button aria-label=&quot;Move Main menu to sidebar&quot; data-event-name=&quot;pinnable-header.vector-main-menu.pin&quot; …</pre></li><li><b>assert_visible</b> Verify the copy button is still visible <small>0.0 ms</small><div class="mono">div &gt; div &gt; div:nth-of-type(1) &gt; button:nth-of-type(1)</div><div class="gallery"></div></li></ol><pre>Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;div &gt; div &gt; div:nth-of-type(1) &gt; button:nth-of-type(1)&quot;)
+    - locator resolved to 5 elements. Proceeding with the first one: &lt;button aria-label=&quot;Move Main menu to sidebar&quot; data-event-name=&quot;pinnable-header.vector-main-menu.pin&quot; …</pre></details><details class="item failed" open><summary><span class="pill failed">failed</span> <b>T-10682f</b> &middot; Anchor link deep linking <small>37191.5 ms</small></summary><p>Click a deep‑link anchor and verify the URL hash updates</p><p><b>Expected:</b> URL hash matches the anchor target</p><ol><li><b>goto</b> Open the Blog page <small>13083.0 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>click</b> Click the &#x27;(Top)&#x27; anchor link <small>24108.4 ms</small><div class="mono">div &gt; ul &gt; li:nth-of-type(1) &gt; a</div><div class="gallery"><a href="screenshots/SHOT-dd8b16f2.png" target="_blank"><img class="shot" src="screenshots/SHOT-dd8b16f2.png" alt="Failure: Click the &#x27;(Top)&#x27; anchor link"></a></div><pre>Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;div &gt; ul &gt; li:nth-of-type(1) &gt; a&quot;)
+    - locator resolved to 102 elements. Proceeding with the first one: &lt;a accesskey=&quot;z&quot; href=&quot;/wiki/Main_Page&quot; title=&quot;Visit the main page [alt-z]&quot;&gt;…&lt;/a&gt;
+  - attempting click action
+    2 × wait…</pre></li><li><b>assert_url</b> Verify the URL hash is &#x27;#Top&#x27; <small>0.0 ms</small><div class="mono"></div><div class="gallery"></div></li></ol><pre>Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;div &gt; ul &gt; li:nth-of-type(1) &gt; a&quot;)
+    - locator resolved to 102 elements. Proceeding with the first one: &lt;a accesskey=&quot;z&quot; href=&quot;/wiki/Main_Page&quot; title=&quot;Visit the main page [alt-z]&quot;&gt;…&lt;/a&gt;
+  - attempting click action
+    2 × wait…</pre></details><details class="item failed" open><summary><span class="pill failed">failed</span> <b>T-c865d7</b> &middot; Prev/next navigation simulation <small>35689.9 ms</small></summary><p>Navigate using the &#x27;History&#x27; link then the &#x27;See also&#x27; link to simulate previous/next navigation</p><p><b>Expected:</b> URL updates to History page then to See also section</p><ol><li><b>goto</b> Open the Blog page <small>4595.2 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>click</b> Click the &#x27;History&#x27; link <small>31094.5 ms</small><div class="mono">div &gt; ul &gt; li:nth-of-type(2) &gt; a</div><div class="gallery"><a href="screenshots/SHOT-b09846ca.png" target="_blank"><img class="shot" src="screenshots/SHOT-b09846ca.png" alt="Failure: Click the &#x27;History&#x27; link"></a></div><pre>Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;div &gt; ul &gt; li:nth-of-type(2) &gt; a&quot;)
+    - locator resolved to 79 elements. Proceeding with the first one: &lt;a href=&quot;/wiki/Wikipedia:Contents&quot; title=&quot;Guides to browsing Wikipedia&quot;&gt;…&lt;/a&gt;
+  - attempting click action
+    2 × waiting f…</pre></li><li><b>assert_url</b> Verify URL contains &#x27;History&#x27; <small>0.0 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>click</b> Click the &#x27;See also&#x27; link <small>0.0 ms</small><div class="mono">div &gt; ul &gt; li:nth-of-type(10) &gt; a</div><div class="gallery"></div></li><li><b>assert_url</b> Verify URL contains &#x27;See_also&#x27; <small>0.0 ms</small><div class="mono"></div><div class="gallery"></div></li></ol><pre>Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;div &gt; ul &gt; li:nth-of-type(2) &gt; a&quot;)
+    - locator resolved to 79 elements. Proceeding with the first one: &lt;a href=&quot;/wiki/Wikipedia:Contents&quot; title=&quot;Guides to browsing Wikipedia&quot;&gt;…&lt;/a&gt;
+  - attempting click action
+    2 × waiting f…</pre></details><details class="item failed" open><summary><span class="pill failed">failed</span> <b>T-1a9ad1</b> &middot; Appearance (version) switcher toggles <small>37298.8 ms</small></summary><p>Toggle the appearance dropdown (acts as a version/theme switcher) and verify it becomes visible</p><p><b>Expected:</b> Appearance dropdown is visible after click</p><ol><li><b>goto</b> Open the Blog page <small>4557.2 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>click</b> Click the appearance dropdown checkbox <small>32741.4 ms</small><div class="mono">#vector-appearance-dropdown-checkbox</div><div class="gallery"><a href="screenshots/SHOT-62f0fa06.png" target="_blank"><img class="shot" src="screenshots/SHOT-62f0fa06.png" alt="Failure: Click the appearance dropdown checkbox"></a></div><pre>Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;#vector-appearance-dropdown-checkbox&quot;)
+    - locator resolved to &lt;input role=&quot;button&quot; type=&quot;checkbox&quot; aria-haspopup=&quot;true&quot; aria-label=&quot;Appearance&quot; class=&quot;vector-dropdown-checkbox &quot; id=&quot;vector-appearance-dropdown-checkbox&quot; data-e…</pre></li><li><b>assert_visible</b> Verify the appearance dropdown is visible <small>0.0 ms</small><div class="mono">#vector-appearance-dropdown-checkbox</div><div class="gallery"></div></li></ol><pre>Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;#vector-appearance-dropdown-checkbox&quot;)
+    - locator resolved to &lt;input role=&quot;button&quot; type=&quot;checkbox&quot; aria-haspopup=&quot;true&quot; aria-label=&quot;Appearance&quot; class=&quot;vector-dropdown-checkbox &quot; id=&quot;vector-appearance-dropdown-checkbox&quot; data-e…</pre></details><details class="item passed" open><summary><span class="pill passed">passed</span> <b>T-29178a</b> &middot; Language selector visibility <small>30854.2 ms</small></summary><p>Open the language selector and verify it is displayed</p><p><b>Expected:</b> Language selector becomes visible</p><ol><li><b>goto</b> Open the Blog page <small>6560.1 ms</small><div class="mono"></div><div class="gallery"></div></li><li><b>click</b> Click the language button checkbox <small>11075.7 ms</small><div class="mono">#p-lang-btn-checkbox</div><div class="gallery"></div></li><li><b>assert_visible</b> Verify the language selector is visible <small>13218.2 ms</small><div class="mono">#p-lang-btn-checkbox</div><div class="gallery"></div></li></ol></details><details class="item failed" open><summary><span class="pill failed">failed</span> <b>T-8716d6</b> &middot; Table of contents toggle <small>19667.3 ms</small></summary><p>Toggle the page TOC and verify it is displayed</p><p><b>Expected:</b> TOC checkbox is visible after click</p><ol><li><b>goto</b> Open the Blog page <small>19667.3 ms</small><div class="mono"></div><div class="gallery"><a href="screenshots/SHOT-169bb71c.png" target="_blank"><img class="shot" src="screenshots/SHOT-169bb71c.png" alt="Failure: Open the Blog page"></a></div><pre>Page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL
+Call log:
+  - navigating to &quot;/blog&quot;, waiting until &quot;load&quot;
+</pre></li><li><b>click</b> Click the TOC toggle checkbox <small>0.0 ms</small><div class="mono">#vector-page-titlebar-toc-checkbox</div><div class="gallery"></div></li><li><b>assert_visible</b> Verify the TOC checkbox is visible <small>0.0 ms</small><div class="mono">#vector-page-titlebar-toc-checkbox</div><div class="gallery"></div></li></ol><pre>Page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL
+Call log:
+  - navigating to &quot;/blog&quot;, waiting until &quot;load&quot;
+</pre></details>
+  </section>
+  <section class="panel">
+    <h2>Bugs</h2>
+    <article class="bug"><h3>BUG-4c5f21 &middot; Search results URL missing query parameter</h3><p><span class="pill high">high</span> <span class="pill">functional</span></p><p>After initiating a search, the page redirects to a specific article (https://en.wikipedia.org/wiki/Blogging) instead of a search results page, so the URL does not contain the expected &#x27;search&#x27; query parameter.</p><p><b>Expected:</b> Search results page URL contains the query parameter<br><b>Actual:</b> URL does not contain &#x27;search&#x27; (got https://en.wikipedia.org/wiki/Blogging)</p><h4>Reproduction</h4><ol><li>Navigate to https://en.wikipedia.org/wiki/Blog</li><li>Enter a search term and submit the search</li><li>Observe that the URL changes to https://en.wikipedia.org/wiki/Blogging and does not contain the search query parameter</li></ol><div class="gallery"><a href="screenshots/SHOT-156da252.png" target="_blank"><img class="shot" src="screenshots/SHOT-156da252.png" alt="Failure: Verify the URL contains the search query"></a></div></article><article class="bug"><h3>BUG-af7cb9 &middot; Appearance dropdown checkbox not found on page</h3><p><span class="pill medium">medium</span> <span class="pill">ui</span></p><p>The selector #vector-appearance-dropdown-checkbox could not be located within the default timeout, preventing the test from clicking the appearance dropdown and verifying its visibility.</p><p><b>Expected:</b> Appearance dropdown is visible after click<br><b>Actual:</b> Page.click: Timeout 5000ms exceeded.
+Call log:
+  - waiting for locator(&quot;#vector-appearance-dropdown-checkbox&quot;)
+    - locator resolved to &lt;input role=&quot;button&quot; type=&quot;checkbox&quot; aria-haspopup=&quot;true&quot; aria-label=&quot;Appearance&quot; class=&quot;vector-dropdown-checkbox &quot; id=&quot;vector-appearance-dropdown-checkbox&quot; data-e…</p><h4>Reproduction</h4><ol><li>Navigate to https://en.wikipedia.org/wiki/Blog</li><li>Attempt to locate the element with id &#x27;vector-appearance-dropdown-checkbox&#x27;</li><li>Observe that the element is not found and the click action times out</li></ol><div class="gallery"><a href="screenshots/SHOT-62f0fa06.png" target="_blank"><img class="shot" src="screenshots/SHOT-62f0fa06.png" alt="Failure: Click the appearance dropdown checkbox"></a></div></article>
+  </section>
+  <section class="panel">
+    <h2>Evidence gallery (8)</h2>
+    <div class="gallery large"><a href="screenshots/SHOT-db40bf5e.png" target="_blank"><img class="shot" src="screenshots/SHOT-db40bf5e.png" alt="page 1: Blog - Wikipedia"></a><a href="screenshots/SHOT-b1943aba.png" target="_blank"><img class="shot" src="screenshots/SHOT-b1943aba.png" alt="Failure: Open the Blog page"></a><a href="screenshots/SHOT-156da252.png" target="_blank"><img class="shot" src="screenshots/SHOT-156da252.png" alt="Failure: Verify the URL contains the search query"></a><a href="screenshots/SHOT-bb7e68fe.png" target="_blank"><img class="shot" src="screenshots/SHOT-bb7e68fe.png" alt="Failure: Click the first button in the code block (assumed copy)"></a><a href="screenshots/SHOT-dd8b16f2.png" target="_blank"><img class="shot" src="screenshots/SHOT-dd8b16f2.png" alt="Failure: Click the &#x27;(Top)&#x27; anchor link"></a><a href="screenshots/SHOT-b09846ca.png" target="_blank"><img class="shot" src="screenshots/SHOT-b09846ca.png" alt="Failure: Click the &#x27;History&#x27; link"></a><a href="screenshots/SHOT-62f0fa06.png" target="_blank"><img class="shot" src="screenshots/SHOT-62f0fa06.png" alt="Failure: Click the appearance dropdown checkbox"></a><a href="screenshots/SHOT-169bb71c.png" target="_blank"><img class="shot" src="screenshots/SHOT-169bb71c.png" alt="Failure: Open the Blog page"></a></div>
+  </section>
+</main>
+<script>function filterAll(){const q=document.getElementById('search').value.toLowerCase(),s=document.getElementById('status').value;document.querySelectorAll('.item').forEach(x=>{const ok=(s==='all'||x.classList.contains(s))&&x.innerText.toLowerCase().includes(q);x.style.display=ok?'block':'none';});}</script>
+</body></html>

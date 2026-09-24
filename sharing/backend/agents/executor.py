@@ -111,18 +111,12 @@ class ExecutorAgent(Agent):
             step.finished_at - step.started_at
         ).total_seconds() * 1000
 
-        # Screenshot after a step that worked. A run where everything
-        # passes used to produce no evidence at all (on_failure only fires
-        # on the way down), which left the report with nothing to show for
-        # a green run — so a passing step is now worth a shot too.
-        if step.status == TestStatus.PASSED and (
-            state.screenshot_config.get("on_every_step")
-            or state.screenshot_config.get("on_success")
-        ):
+        # Screenshot after (optional)
+        if (state.screenshot_config.get("on_every_step")
+                and step.status == TestStatus.PASSED):
             s = capture(
                 state, page, kind="after_action",
                 label=f"After: {step.description}",
-                description=f"{step.action.value} {step.selector or step.value or ''}".strip(),
                 step_index=step.index,
             )
             step.screenshot_after = s.id

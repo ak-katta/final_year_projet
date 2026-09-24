@@ -2,56 +2,312 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>QA Agent</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Autonomous AI QA Engineer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+<link rel="stylesheet" href="style.css?v=3">
+<script>
+  // Applied before first paint so a dark-mode reload never flashes white.
+  try {
+    var t = localStorage.getItem("qa-theme");
+    if (t) document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
 </head>
 <body>
 
-  <h1>QA Agent</h1>
-  <p class="subtitle">points a browser at a URL, plans some tests with an LLM, runs them, tells you what broke</p>
+<header class="appbar">
+  <div class="wrap appbar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🤖</span>
+      <div>
+        <h1>Autonomous AI QA Engineer</h1>
+        <p>Black-box web testing, end to end</p>
+      </div>
+    </div>
 
-  <form id="run-form">
-    <input type="url" id="url-input" placeholder="https://example.com" required>
-    <input type="number" id="max-tests-input" placeholder="max tests (optional)" min="1">
-    <button type="submit">run it</button>
-  </form>
+    <div class="appbar-spacer"></div>
 
-  <div id="status-box" class="hidden">
-    <p><strong>url:</strong> <span id="status-url"></span></p>
-    <p><strong>phase:</strong> <span id="status-phase">-</span></p>
-    <p><strong>site type:</strong> <span id="status-sitetype">-</span></p>
+    <!-- Live run status: phase, target, elapsed, stop -->
+    <div id="runpill" class="runpill hidden">
+      <span class="badge" id="rp-phase">—</span>
+      <span class="rp-url" id="rp-url"></span>
+      <span class="rp-clock" id="rp-clock">00:00</span>
+      <button class="iconbtn danger" id="stop-btn" type="button"
+              title="Stop this run" aria-label="Stop this run">■</button>
+    </div>
+
+    <button class="iconbtn" id="theme-btn" type="button"
+            title="Switch between light and dark" aria-label="Switch colour theme">◐</button>
   </div>
+  <div class="topbar-progress" id="topbar-progress"></div>
+</header>
 
-  <div id="results" class="hidden">
+<div class="wrap">
+  <!-- Setup → Test Cases → Execution → Results → Bugs → Dashboard -->
+  <nav class="tabs" id="tabs" role="tablist" aria-label="QA run stages">
+    <button class="tab" role="tab" id="tab-setup" data-tab="setup"
+            aria-selected="true" aria-controls="panel-setup">
+      <span class="n">1</span> Test Setup</button>
+    <button class="tab" role="tab" id="tab-cases" data-tab="cases"
+            aria-selected="false" aria-controls="panel-cases" tabindex="-1">
+      <span class="n">2</span> Test Cases <span class="count hidden" data-count="cases"></span></button>
+    <button class="tab" role="tab" id="tab-execution" data-tab="execution"
+            aria-selected="false" aria-controls="panel-execution" tabindex="-1">
+      <span class="n">3</span> Execution</button>
+    <button class="tab" role="tab" id="tab-results" data-tab="results"
+            aria-selected="false" aria-controls="panel-results" tabindex="-1">
+      <span class="n">4</span> Results</button>
+    <button class="tab" role="tab" id="tab-bugs" data-tab="bugs"
+            aria-selected="false" aria-controls="panel-bugs" tabindex="-1">
+      <span class="n">5</span> Bugs <span class="count hidden" data-count="bugs"></span></button>
+    <button class="tab" role="tab" id="tab-dashboard" data-tab="dashboard"
+            aria-selected="false" aria-controls="panel-dashboard" tabindex="-1">
+      <span class="n">6</span> Dashboard</button>
+  </nav>
 
-    <section>
-      <h2>tests</h2>
-      <table id="tests-table">
-        <thead><tr><th>name</th><th>category</th><th>status</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </section>
+  <!-- ── 1. Test Setup ─────────────────────────────────────── -->
+  <section class="panel active" id="panel-setup" role="tabpanel" aria-labelledby="tab-setup" tabindex="0">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Point the agent at a site</h2>
+          <p class="lead">It explores the site itself, writes its own test cases, runs them
+            in a real browser and reports what broke.</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <form id="run-form" novalidate>
+          <div class="field url-field">
+            <label for="url-input">Website URL</label>
+            <input type="url" id="url-input" placeholder="https://example.com"
+                   autocomplete="url" spellcheck="false" required
+                   aria-describedby="url-error">
+            <span class="hint" id="url-error"></span>
+          </div>
 
-    <section>
-      <h2>bugs found</h2>
-      <div id="bugs-list"></div>
-    </section>
+          <div class="field-row">
+            <div class="field">
+              <label for="browser-input">Browser</label>
+              <select id="browser-input"><option value="chromium">Chromium</option></select>
+            </div>
+            <div class="field">
+              <label for="mode-input">Mode</label>
+              <select id="mode-input">
+                <option value="headless">Headless</option>
+                <option value="headed">Headed — show the browser</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="max-pages-input">Max pages to explore</label>
+              <input type="number" id="max-pages-input" value="1" min="1" max="30">
+            </div>
+            <div class="field">
+              <label for="max-tests-input">Max test cases</label>
+              <input type="number" id="max-tests-input" placeholder="all" min="1">
+            </div>
+          </div>
 
-    <section>
-      <h2>report</h2>
-      <pre id="report-text"></pre>
-    </section>
+          <fieldset class="options">
+            <legend>What to run</legend>
 
-  </div>
+            <label class="opt">
+              <input type="checkbox" id="checks-input" checked>
+              <span><strong>Deterministic checks</strong>
+                <small>Broken links, accessibility, UI rendering, console errors,
+                  failed requests and page load — no model needed.</small></span>
+            </label>
 
-  <section>
-    <h2>past runs</h2>
-    <table id="history-table">
-      <thead><tr><th>url</th><th>phase</th><th>passed</th><th>failed</th><th>bugs</th></tr></thead>
-      <tbody></tbody>
-    </table>
+            <label class="opt">
+              <input type="checkbox" id="replay-input">
+              <span><strong>Regression run</strong>
+                <small>Replay the last saved plan for this URL instead of planning fresh,
+                  then diff the results against it.</small></span>
+            </label>
+
+            <label class="opt">
+              <input type="checkbox" id="load-input">
+              <span><strong>Load test</strong>
+                <small>Fires many concurrent requests. Only point this at a server you own
+                  or are authorised to test.</small></span>
+            </label>
+
+            <div id="load-options" class="load-options hidden">
+              <label class="inline">concurrent clients
+                <input type="number" id="load-concurrency-input" value="20" min="1" max="200">
+              </label>
+              <label class="inline">total requests
+                <input type="number" id="load-requests-input" value="200" min="1" max="5000">
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="form-actions">
+            <button type="submit" class="btn" id="start-btn">Start testing</button>
+            <span class="lead" id="form-note"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>Run history</h3>
+        <span class="lead" id="history-count"></span>
+        <div class="spacer"></div>
+        <button class="btn ghost sm" id="refresh-history" type="button">Refresh</button>
+      </div>
+      <div class="card-body flush">
+        <div class="table-scroll">
+          <table id="history-table">
+            <thead>
+              <tr>
+                <th>Target</th><th>When</th><th>Phase</th>
+                <th>Results</th><th>Bugs</th><th>Duration</th><th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <script src="app.js"></script>
+  <!-- ── 2. Test Cases ─────────────────────────────────────── -->
+  <section class="panel" id="panel-cases" role="tabpanel" aria-labelledby="tab-cases" tabindex="0">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Test cases</h2>
+          <p class="lead">Written by the agent after exploring the site, plus the
+            deterministic checks it always runs.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="cases-search" placeholder="Search test cases…"
+               aria-label="Search test cases">
+        <div class="filters" id="cases-filters" role="group" aria-label="Filter by status">
+          <button class="filter" type="button" data-status="all" aria-pressed="true">All</button>
+          <button class="filter" type="button" data-status="passed" aria-pressed="false">Passed</button>
+          <button class="filter" type="button" data-status="failed" aria-pressed="false">Failed</button>
+          <button class="filter" type="button" data-status="other" aria-pressed="false">Not run</button>
+        </div>
+      </div>
+      <div class="card-body flush">
+        <div class="table-scroll">
+          <table id="cases-table">
+            <thead>
+              <tr><th>ID</th><th>Test scenario</th><th>Area</th>
+                  <th>Technique</th><th>Priority</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 3. Execution ──────────────────────────────────────── -->
+  <section class="panel" id="panel-execution" role="tabpanel" aria-labelledby="tab-execution" tabindex="0">
+    <div class="exec-grid">
+      <div class="card" style="margin:0">
+        <div class="card-head"><h3>Pipeline</h3></div>
+        <div class="card-body">
+          <ol class="pipeline" id="pipeline"></ol>
+          <div class="exec-progress" id="exec-progress"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin:0">
+        <div class="card-head"><h3>Live test</h3></div>
+        <div class="card-body" id="current-test">
+          <div class="empty"><span class="glyph">⏵</span> Nothing running yet.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4. Results ────────────────────────────────────────── -->
+  <section class="panel" id="panel-results" role="tabpanel" aria-labelledby="tab-results" tabindex="0">
+    <div class="card">
+      <div class="card-head"><h2>Results</h2></div>
+      <div class="card-body">
+        <div class="cards" id="result-cards"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Every test</h3></div>
+      <div class="toolbar">
+        <input type="search" id="results-search" placeholder="Search results…"
+               aria-label="Search results">
+        <div class="filters" id="results-filters" role="group" aria-label="Filter by status">
+          <button class="filter" type="button" data-status="all" aria-pressed="true">All</button>
+          <button class="filter" type="button" data-status="passed" aria-pressed="false">Passed</button>
+          <button class="filter" type="button" data-status="failed" aria-pressed="false">Failed</button>
+          <button class="filter" type="button" data-status="other" aria-pressed="false">Not run</button>
+        </div>
+      </div>
+      <div class="card-body flush">
+        <div class="table-scroll">
+          <table id="results-table">
+            <thead>
+              <tr><th>Test</th><th>Area</th><th>Status</th><th>Duration</th><th>Detail</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5. Bugs ───────────────────────────────────────────── -->
+  <section class="panel" id="panel-bugs" role="tabpanel" aria-labelledby="tab-bugs" tabindex="0">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Bugs detected</h2>
+          <p class="lead">Each one carries its reproduction steps and the screenshots
+            taken at the moment it happened.</p>
+        </div>
+        <div class="spacer"></div>
+        <div class="filters" id="bugs-filters" role="group" aria-label="Filter by severity">
+          <button class="filter" type="button" data-sev="all" aria-pressed="true">All</button>
+          <button class="filter" type="button" data-sev="critical" aria-pressed="false">Critical</button>
+          <button class="filter" type="button" data-sev="high" aria-pressed="false">High</button>
+          <button class="filter" type="button" data-sev="medium" aria-pressed="false">Medium</button>
+          <button class="filter" type="button" data-sev="low" aria-pressed="false">Low</button>
+        </div>
+      </div>
+      <div class="card-body" id="bugs-list"></div>
+    </div>
+  </section>
+
+  <!-- ── 6. Dashboard ──────────────────────────────────────── -->
+  <section class="panel" id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" tabindex="0">
+    <div id="dashboard-body">
+      <div class="card"><div class="card-body">
+        <div class="empty"><span class="glyph">📊</span>
+          Run something first — the summary lands here when it finishes.</div>
+      </div></div>
+    </div>
+  </section>
+</div>
+
+<!-- Screenshot viewer -->
+<dialog class="lightbox" id="lightbox">
+  <div class="lightbox-head">
+    <span id="lightbox-caption"></span>
+    <span class="spacer"></span>
+    <a id="lightbox-open" href="#" target="_blank" rel="noopener" class="btn ghost sm">Open original</a>
+    <button class="iconbtn" id="lightbox-close" type="button" aria-label="Close">✕</button>
+  </div>
+  <img id="lightbox-img" alt="">
+</dialog>
+
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<script src="app.js?v=3"></script>
 </body>
 </html>

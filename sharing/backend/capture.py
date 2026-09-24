@@ -12,10 +12,9 @@ from urllib.parse import urldefrag, urljoin, urlparse
 
 from playwright.sync_api import sync_playwright
 
-import paths
 from state import (
     QAState, PageSnapshot, InteractiveElement, FormInfo, FormField,
-    LinkInfo, ImageInfo, Screenshot, NetworkEvent,
+    LinkInfo, ImageInfo, Screenshot,
 )
 
 
@@ -174,13 +173,10 @@ def launch(state: QAState, headless: bool = True):
     page = context.new_page()
 
     page.on("console", lambda msg: state.add_console({
-        "type": msg.type, "text": msg.text,
-        "location": (msg.location or {}).get("url", "") if isinstance(msg.location, dict)
-                    else str(msg.location),
+        "type": msg.type, "text": msg.text, "location": str(msg.location),
     }))
     page.on("pageerror", lambda err: state.add_page_error(str(err)))
-    page.on("requestfailed", lambda req: _on_request_failed(state, req))
-    page.on("response", lambda resp: _on_response(state, resp))
+    page.on("requestfailed", lambda req: state.add_request_failure(req.url))
 
     state._playwright = pw
     state._browser = browser
@@ -192,50 +188,6 @@ def launch(state: QAState, headless: bool = True):
     state.page_load_ms = (time.time() - t0) * 1000
 
     return page
-
-
-# Requests the browser cancels on its own. A navigation kills whatever was
-# still in flight, an extension or the browser blocks a tracker — none of
-# that is the site failing, and on a busy page it is most of the list.
-BENIGN_NET_ERRORS = (
-    "net::ERR_ABORTED",
-    "net::ERR_BLOCKED_BY_CLIENT",
-    "net::ERR_BLOCKED_BY_RESPONSE",
-    "net::ERR_CACHE_MISS",
-)
-
-
-def _on_request_failed(state: QAState, req) -> None:
-    try:
-        failure = req.failure or ""
-    except Exception:
-        failure = ""
-    if any(b in failure for b in BENIGN_NET_ERRORS):
-        return
-    try:
-        state.add_network_event(NetworkEvent(
-            url=req.url, method=req.method, status=0, ok=False,
-            resource_type=req.resource_type,
-        ))
-        state.add_request_failure(req.url)
-    except Exception:
-        pass
-
-
-def _on_response(state: QAState, resp) -> None:
-    """Record error responses — a 404 that the browser received fine is
-    still a failed request, and requestfailed never fires for it."""
-    try:
-        status = resp.status
-        if status < 400:
-            return
-        req = resp.request
-        state.add_network_event(NetworkEvent(
-            url=resp.url, method=req.method, status=status, ok=False,
-            resource_type=req.resource_type,
-        ))
-    except Exception:
-        pass
 
 
 def close(state: QAState) -> None:
@@ -388,7 +340,7 @@ def capture(
     selector: str | None = None,
 ) -> Screenshot:
     """Takes a screenshot, drops it in runs/<run_id>/screenshots/, and registers it on state."""
-    out_dir = paths.run_dir(state.output_dir, state.run_id) / "screenshots"
+    out_dir = Path(state.output_dir) / state.run_id / "screenshots"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     test = state.get_test(test_id) if test_id else state.get_current_test()
@@ -424,8 +376,4 @@ def capture(
     shot.file_size_bytes = file_path.stat().st_size if file_path.exists() else 0
 
     state.add_screenshot(shot)
-    # keep the owning test's own evidence list in sync, so the report can
-    # show a test's screenshots without walking the whole run's gallery
-    if test and shot.id not in test.screenshot_ids:
-        test.screenshot_ids.append(shot.id)
     return shot

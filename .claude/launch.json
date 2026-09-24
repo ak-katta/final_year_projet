@@ -4,7 +4,16 @@
     {
       "name": "qa-agent-api",
       "runtimeExecutable": ".venv/bin/uvicorn",
-      "runtimeArgs": ["--app-dir", "backend", "main:app", "--host", "0.0.0.0", "--port", "8000"],
+      "runtimeArgs": [
+        "--app-dir",
+        "backend",
+        "main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload"
+      ],
       "port": 8000
     }
   ]
