@@ -8,7 +8,6 @@ from pydantic import ValidationError
 
 from state import (
     QAState, TestCase, Step, ActionType, TestCategory, Severity, PageSnapshot,
-    TestArea, TestTechnique,
 )
 from agents.base import Agent
 
@@ -34,33 +33,14 @@ use selectors from ONE page block below, and its first step MUST be a
 you navigate there:
 {pages}
 
-Generate 10-18 test cases covering the domain guidance, spread across the
+Generate 8-15 test cases covering the domain guidance, spread across the
 discovered pages where relevant.
-
-COVERAGE. Work through this checklist and write a test for every row the
-site actually supports. Skip a row only when the elements for it do not
-exist on any page above — never invent a selector to fill a row.
-
-  area="login"           valid credentials log in successfully
-  area="login"           wrong password is rejected                  (technique="negative")
-  area="form"            submitting with a required field empty is blocked (technique="negative")
-  area="form"            an invalid email format is rejected         (technique="negative")
-  area="navigation"      a menu item / link lands on the right page
-  area="button"          clicking a button performs its expected action
-  area="search"          a valid query returns results
-  area="search"          an empty or nonsense query is handled gracefully (technique="negative")
-  area="error_handling"  invalid input produces a visible, specific error message
-
-Roughly a third of the plan should be negative tests — wrong data, empty
-values, invalid formats — because that is where real defects hide.
 
 Reply with ONLY this JSON array:
 [
   {{
     "name": "Add product to cart",
     "category": "functional",
-    "area": "button",
-    "technique": "functional",
     "description": "Verify cart updates when adding a product",
     "expected": "Cart badge shows 1",
     "severity_if_fail": "high",
@@ -77,28 +57,8 @@ the page headers above (starting with http:// or https://), never a bare
 path like "/cart".
 
 Valid categories: functional, ui, a11y, performance, security, compatibility, visual, content, seo
-Valid areas:      login, form, navigation, button, search, error_handling, ui, other
-Valid techniques: functional, negative, validation, ui, exploratory
 Valid actions:    click, fill, select, goto, press, hover, wait, assert_text, assert_url, assert_visible, scroll, screenshot
 Valid severities: critical, high, medium, low, info
-
-Every test MUST end with an assertion step (assert_text, assert_url or
-assert_visible). A test that only clicks things proves nothing — the
-assertion is what turns an action into a comparison of expected vs actual.
-
-Assert on something you have actually been shown. Do NOT guess a URL
-substring from a link's label: a "Mobiles" menu item may well land on
-/mobile-phones-store, and asserting the URL contains "mobiles" then fails
-a link that works perfectly. Prefer, in this order:
-  1. assert_visible on a selector from the element list
-  2. assert_text with wording copied from the page text above
-  3. assert_url — ONLY with a path you can see verbatim in a href above
-For a link whose destination you cannot see, assert that the expected
-heading or content is visible after the click, not what the URL looks like.
-
-For a negative test, the expected outcome is the rejection: assert that
-the error message appears, or that the URL did NOT change to the success
-page. Do not write a negative test that expects success.
 
 For a search box: filling it is not enough by itself — the search still
 needs to be submitted. Follow the "fill" step with either a "press" step
@@ -171,8 +131,6 @@ class PlannerAgent(Agent):
                 case = TestCase(
                     name=str(item.get("name") or f"Test {i+1}"),
                     category=self._safe_category(item.get("category")),
-                    area=self._safe_area(item),
-                    technique=self._safe_technique(item),
                     description=str(item.get("description", "")),
                     expected=str(item.get("expected", "")),
                     severity_if_fail=self._safe_severity(
@@ -216,49 +174,6 @@ class PlannerAgent(Agent):
             return TestCategory(str(v).lower())
         except ValueError:
             return TestCategory.FUNCTIONAL
-
-    @staticmethod
-    def _safe_area(item: dict) -> TestArea:
-        try:
-            return TestArea(str(item.get("area", "")).lower())
-        except ValueError:
-            pass
-        # model left it off or made one up — infer from the test's own words
-        text = f"{item.get('name', '')} {item.get('description', '')}".lower()
-        for needle, area in (
-            ("login", TestArea.LOGIN), ("sign in", TestArea.LOGIN),
-            ("log in", TestArea.LOGIN), ("credential", TestArea.LOGIN),
-            ("search", TestArea.SEARCH),
-            ("form", TestArea.FORM), ("submit", TestArea.FORM),
-            ("email", TestArea.FORM), ("field", TestArea.FORM),
-            ("navigat", TestArea.NAVIGATION), ("menu", TestArea.NAVIGATION),
-            ("link", TestArea.NAVIGATION), ("page", TestArea.NAVIGATION),
-            ("error", TestArea.ERROR_HANDLING), ("invalid", TestArea.ERROR_HANDLING),
-            ("button", TestArea.BUTTON), ("click", TestArea.BUTTON),
-        ):
-            if needle in text:
-                return area
-        return TestArea.OTHER
-
-    @staticmethod
-    def _safe_technique(item: dict) -> TestTechnique:
-        try:
-            return TestTechnique(str(item.get("technique", "")).lower())
-        except ValueError:
-            pass
-        text = f"{item.get('name', '')} {item.get('description', '')}".lower()
-        negative = (
-            "invalid", "wrong", "incorrect", "empty", "blank", "missing",
-            "without", "fail", "reject", "blocked", "locked", "unauthor",
-            "no results", "nonexistent", "malformed",
-        )
-        if any(w in text for w in negative):
-            return TestTechnique.NEGATIVE
-        if str(item.get("category", "")).lower() == "ui":
-            return TestTechnique.UI
-        if str(item.get("category", "")).lower() == "a11y":
-            return TestTechnique.ACCESSIBILITY
-        return TestTechnique.FUNCTIONAL
 
     @staticmethod
     def _safe_severity(v) -> Severity:

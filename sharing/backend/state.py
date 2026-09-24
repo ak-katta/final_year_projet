@@ -12,7 +12,6 @@ Design goals:
 
 Schema history:
   v1 → v2  : screenshot list[str] replaced by list[Screenshot] + indexes
-  v2 → v3  : tests gained area/technique; load_test + regression results
 """
 
 from __future__ import annotations
@@ -22,7 +21,6 @@ import time
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-import threading
 from typing import Any, Literal, Optional
 from uuid import uuid4
 
@@ -40,7 +38,7 @@ from pydantic import (
 # SCHEMA VERSION
 # ═══════════════════════════════════════════════════════════════
 
-CURRENT_SCHEMA_VERSION = 3
+CURRENT_SCHEMA_VERSION = 2
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -101,40 +99,6 @@ class TestCategory(str, Enum):
     SEO           = "seo"
 
 
-class TestArea(str, Enum):
-    """What part of the app a test exercises — the rows of the coverage matrix."""
-    LOGIN          = "login"
-    FORM           = "form"
-    NAVIGATION     = "navigation"
-    BUTTON         = "button"
-    SEARCH         = "search"
-    LINKS          = "links"
-    UI             = "ui"
-    ERROR_HANDLING = "error_handling"
-    ACCESSIBILITY  = "accessibility"
-    PAGE_LOAD      = "page_load"
-    CONSOLE        = "console"
-    NETWORK        = "network"
-    LOAD           = "load"          # server under concurrent load
-    OTHER          = "other"
-
-
-class TestTechnique(str, Enum):
-    """How a test goes about it — the testing method being demonstrated.
-
-    Everything here is black-box: the agent drives the app through a real
-    browser and never reads the application's source.
-    """
-    FUNCTIONAL    = "functional"     # does the happy path work
-    NEGATIVE      = "negative"       # invalid input / wrong data
-    VALIDATION    = "validation"     # expected vs actual comparison
-    UI            = "ui"             # visible elements and interactions
-    ACCESSIBILITY = "accessibility"  # basic a11y rules
-    EXPLORATORY   = "exploratory"    # agent-driven, not scripted up front
-    REGRESSION    = "regression"     # re-run of a saved baseline plan
-    LOAD          = "load"           # many concurrent requests at once
-
-
 class ActionType(str, Enum):
     CLICK          = "click"
     FILL           = "fill"
@@ -163,8 +127,6 @@ ScreenshotKind = Literal[
     "before_action",    # before a step
     "after_action",     # after a step
     "on_failure",       # auto-captured when test fails
-    "on_success",       # auto-captured when a step passes
-    "test_end",         # final state of a test, pass or fail
     "phase_change",     # captured at phase boundaries
     "thumbnail",        # small preview for UI lists
 ]
@@ -331,12 +293,6 @@ class TestCase(BaseModel):
     id: str = Field(default_factory=lambda: f"T-{uuid4().hex[:6]}")
     name: str
     category: TestCategory = TestCategory.FUNCTIONAL
-    area: TestArea = TestArea.OTHER
-    technique: TestTechnique = TestTechnique.FUNCTIONAL
-    # who wrote this test: "planner" (LLM), "checks" (deterministic audit)
-    # or "load". Only planner tests are worth replaying for regression —
-    # the others regenerate themselves on every run.
-    source: str = "planner"
     description: str = ""
     steps: list[Step] = Field(min_length=1)
     expected: str = ""
@@ -430,75 +386,6 @@ class VisualDiff(BaseModel):
     url: str = ""
 
 
-class LoadSample(BaseModel):
-    """One request fired during a load test."""
-    model_config = ConfigDict(extra="ignore")
-
-    status: int = 0
-    ok: bool = False
-    latency_ms: float = 0.0
-    error: str = ""
-
-
-class LoadTestResult(BaseModel):
-    """Outcome of hammering one URL with many concurrent requests.
-
-    Deliberately plain HTTP rather than browser tabs: the point is to put
-    the *server* under concurrent load, and a few hundred Chromium pages
-    would bottleneck on the client long before the server noticed.
-    """
-    model_config = ConfigDict(extra="ignore")
-
-    url: str = ""
-    concurrency: int = 0
-    total_requests: int = 0
-    duration_s: float = 0.0
-
-    completed: int = 0
-    succeeded: int = 0
-    failed: int = 0
-    error_rate: float = 0.0
-    requests_per_second: float = 0.0
-
-    latency_min_ms: float = 0.0
-    latency_mean_ms: float = 0.0
-    latency_p50_ms: float = 0.0
-    latency_p90_ms: float = 0.0
-    latency_p95_ms: float = 0.0
-    latency_p99_ms: float = 0.0
-    latency_max_ms: float = 0.0
-
-    # baseline single-request latency, measured before the storm, so the
-    # report can say how much load actually degraded the server
-    baseline_ms: float = 0.0
-    degradation_factor: float = 0.0
-
-    status_counts: dict[str, int] = Field(default_factory=dict)
-    errors: dict[str, int] = Field(default_factory=dict)
-
-    # thresholds the run was judged against
-    max_error_rate: float = 0.05
-    max_p95_ms: float = 3000.0
-    passed: bool = True
-    verdict: str = ""
-
-
-class RegressionResult(BaseModel):
-    """Diff of this run's test results against an earlier baseline run."""
-    model_config = ConfigDict(extra="ignore")
-
-    baseline_run_id: str = ""
-    baseline_started_at: Optional[datetime] = None
-    compared: int = 0
-
-    regressions: list[dict[str, str]] = Field(default_factory=list)   # passed → failed
-    fixes: list[dict[str, str]] = Field(default_factory=list)         # failed → passed
-    still_failing: list[dict[str, str]] = Field(default_factory=list)
-    stable: int = 0
-    new_tests: list[str] = Field(default_factory=list)
-    missing_tests: list[str] = Field(default_factory=list)
-
-
 class ConsoleLog(BaseModel):
     type: str = "log"               # log | warning | error | info | debug
     text: str = ""
@@ -577,8 +464,6 @@ class QAState(BaseModel):
 
     screenshot_config: dict[str, Any] = Field(default_factory=lambda: {
         "on_every_step": False,
-        "on_success": True,
-        "on_test_end": True,
         "on_failure": True,
         "on_phase_change": True,
         "full_page_on_error": True,
@@ -607,14 +492,6 @@ class QAState(BaseModel):
     # ── Accessibility / Visual ────────────────────────────────
     a11y_issues: list[A11yIssue] = Field(default_factory=list)
     visual_diffs: list[VisualDiff] = Field(default_factory=list)
-
-    # ── Broken links / UI sanity ──────────────────────────────
-    broken_links: list[dict[str, Any]] = Field(default_factory=list)
-    ui_issues: list[dict[str, Any]] = Field(default_factory=list)
-
-    # ── Load & regression ─────────────────────────────────────
-    load_test: Optional[LoadTestResult] = None
-    regression: Optional[RegressionResult] = None
 
     # ── Performance ───────────────────────────────────────────
     page_load_ms: float = 0.0
@@ -657,11 +534,6 @@ class QAState(BaseModel):
     _page: Any = PrivateAttr(default=None)
     _playwright: Any = PrivateAttr(default=None)
 
-    # Set from the API thread when the user asks to stop a run; the
-    # orchestrator thread reads it between tests and between steps. A
-    # threading.Event rather than a bool because two threads touch it.
-    _cancel: Any = PrivateAttr(default_factory=threading.Event)
-
     # ═══════════════════════════════════════════════════════════
     # VALIDATORS
     # ═══════════════════════════════════════════════════════════
@@ -700,19 +572,6 @@ class QAState(BaseModel):
         self.fatal_error = reason
         self.add_error(self.phase.value, reason)
         self.phase = Phase.FAILED
-
-    def request_cancel(self) -> None:
-        """Ask the orchestrator to stop. Returns immediately.
-
-        The run doesn't die on the spot — it finishes the step it's on,
-        then unwinds through the normal reporting path so the partial
-        results, screenshots and report it already produced are kept.
-        """
-        self._cancel.set()
-
-    @property
-    def cancel_requested(self) -> bool:
-        return self._cancel.is_set()
 
     def mark_aborted(self, reason: str) -> None:
         self.fatal_error = reason
@@ -805,11 +664,7 @@ class QAState(BaseModel):
     def add_network_event(self, ev: NetworkEvent) -> None:
         self.network_events.append(ev)
         if not ev.ok or ev.status >= 400:
-            # a page that retries a dead endpoint on a timer would otherwise
-            # fill the report with the same line hundreds of times
-            key = (ev.url, ev.status)
-            if not any((f.url, f.status) == key for f in self.network_failures):
-                self.network_failures.append(ev)
+            self.network_failures.append(ev)
         if len(self.network_events) > self.max_logs:
             self.network_events.pop(0)
 
@@ -922,17 +777,6 @@ class QAState(BaseModel):
     # ── Finalization ──────────────────────────────────────────
 
     def finish(self) -> None:
-        self.compute_metrics()
-        self.phase = Phase.DONE
-
-    def compute_metrics(self) -> None:
-        """Roll up duration, severity/category counts and pass rate.
-
-        Split out of finish() so the reporter can be handed final numbers:
-        it runs before the run is marked done, and reading them too early
-        was what printed "0% pass rate" on a run where everything passed.
-        Safe to call more than once — every field here is recomputed.
-        """
         self.finished_at = datetime.now()
         self.duration_ms = (
             self.finished_at - self.started_at
@@ -960,38 +804,7 @@ class QAState(BaseModel):
             len(self.completed_test_ids) / executed if executed else 0.0
         )
 
-    def coverage_matrix(self) -> dict[str, dict[str, Any]]:
-        """Per-area tally of what ran and how it went.
-
-        This is what proves the run actually exercised login, forms,
-        search, links, a11y and the rest, rather than 10 variations of
-        the same click.
-        """
-        matrix: dict[str, dict[str, Any]] = {}
-        for t in self.test_plan:
-            row = matrix.setdefault(
-                t.area.value,
-                {"planned": 0, "passed": 0, "failed": 0, "skipped": 0,
-                 "not_run": 0, "techniques": []},
-            )
-            row["planned"] += 1
-            if t.status == TestStatus.PASSED:
-                row["passed"] += 1
-            elif t.status in (TestStatus.FAILED, TestStatus.ERROR):
-                row["failed"] += 1
-            elif t.status == TestStatus.SKIPPED:
-                row["skipped"] += 1
-            else:
-                row["not_run"] += 1
-            if t.technique.value not in row["techniques"]:
-                row["techniques"].append(t.technique.value)
-        return matrix
-
-    def technique_counts(self) -> dict[str, int]:
-        counts: dict[str, int] = {}
-        for t in self.test_plan:
-            counts[t.technique.value] = counts.get(t.technique.value, 0) + 1
-        return counts
+        self.phase = Phase.DONE
 
     # ── Diagnostics summary ───────────────────────────────────
 
@@ -1095,8 +908,6 @@ class QAState(BaseModel):
             data.setdefault("baseline_screenshots", {})
             data.setdefault("screenshot_config", {
                 "on_every_step": False,
-                "on_success": True,
-                "on_test_end": True,
                 "on_failure": True,
                 "on_phase_change": True,
                 "full_page_on_error": True,
@@ -1112,20 +923,3 @@ class QAState(BaseModel):
             for test in data.get("test_plan", []):
                 for step in test.get("steps", []):
                     step.setdefault("screenshot_before", None)
-                    step.setdefault("screenshot_after", None)
-            version = 2
-
-        # ── v2 → v3 : area/technique on tests, load + regression slots ──
-        if version < 3:
-            for test in data.get("test_plan", []):
-                test.setdefault("area", "other")
-                test.setdefault("technique", "functional")
-                test.setdefault("source", "planner")
-            data.setdefault("broken_links", [])
-            data.setdefault("ui_issues", [])
-            data.setdefault("load_test", None)
-            data.setdefault("regression", None)
-            version = 3
-
-        data["schema_version"] = version
-        return data
